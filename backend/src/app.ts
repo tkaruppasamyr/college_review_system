@@ -6,6 +6,7 @@ import { authenticateToken } from './apps/auth/authhandler';
 require('dotenv').config();
 import cookieParser from 'cookie-parser';
 const cors = require('cors');
+const morgan = require('morgan');
 
 const rootpath = process.env.ROOT_PATH;
 
@@ -21,11 +22,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type'],
   credentials: true
 }));
-
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`Incoming request: [${req.method}] ${req.url} status: ${res.statusCode}`);
-  next(); // Passes control to the next handler
-});
+app.use(morgan('dev'));
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   console.log(`Incoming request: [${req.method}] ${req.url} status: ${res.statusCode}`);
+//   next(); // Passes control to the next handler
+// });
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);

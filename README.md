@@ -8,7 +8,6 @@ A full-stack College Review System built with the MERN stack (MongoDB, Express.j
 * **College Management**: Endpoints to create, read, update, and delete college records, including an aggregated list showing the average rating and total review count per college[cite: 1].
 * **Review System**: CRUD operations for reviews with pagination and search functionality[cite: 1].
 * **Validation & Error Handling**: Comprehensive input validation using Joi/express-validator[cite: 1].
-* **Testing**: Integration tests for authentication and review endpoints using Jest and Supertest[cite: 1].
 * **Containerization**: Fully containerized local development environment using Docker and Docker Compose[cite: 1].
 
 ## Prerequisites
@@ -42,6 +41,7 @@ $ docker-compose exec backend npm run seed
 Root path : http://localhost:3000
 Login path : http://localhost:3000/auth/login
 Admin path : http://localhost:3000/admin
-Student path : http://localhost:3000/student
+Student path : http://localhost:3000/dashboard/student
+Teacher path : http://localhost:3000/dashboard/teacher
 
 ```
