@@ -9,8 +9,6 @@ RUN npm install
 # Copy remaining source code
 COPY . .
 
-#Seed data running
-RUN npm run seed
 
 EXPOSE 5000
 

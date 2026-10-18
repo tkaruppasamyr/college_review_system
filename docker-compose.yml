@@ -34,7 +34,7 @@ services:
       # Syncs local code to the container for live reloading
       - ./backend:/app
       - /app/node_modules 
-
+    
   frontend:
     build:
       context: ./frontend
@@ -47,12 +47,14 @@ services:
       # For client-side fetching in the browser, the API must be localhost.
       # For Server-Side Rendering (SSR) in Next.js, use http://backend:5000.
       - NEXT_PUBLIC_API_URL=http://localhost:5000
+      - INTERNAL_API_URL=http://backend:5000
     depends_on:
       - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
+    
 
 volumes:
   mongo-data:
