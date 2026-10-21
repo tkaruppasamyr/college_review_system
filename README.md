@@ -45,3 +45,31 @@ Student path : http://localhost:3000/dashboard/student
 Teacher path : http://localhost:3000/dashboard/teacher
 
 ```
+
+## credentials
+
+**1.admin :**
+
+```plaintext
+
+email : 
+password : 
+
+```
+
+**1.teacher :**
+
+```plaintext
+
+email : 
+password : 
+
+```
+**1.student :**
+
+```plaintext
+
+email : 
+password : 
+
+```

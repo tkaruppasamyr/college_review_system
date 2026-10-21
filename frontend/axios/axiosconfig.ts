@@ -1,14 +1,14 @@
 import axios from "axios";
 import type { AxiosInstance, InternalAxiosRequestConfig } from "axios";
-// const isServer = typeof window === 'undefined';
-// const baseURL = isServer ? process.env.INTERNAL_API_URL : process.env.NEXT_PUBLIC_BASE_URL;
+const isServer = typeof window === 'undefined';
+const baseURL = isServer ? process.env.INTERNAL_API_URL : process.env.NEXT_PUBLIC_BASE_URL;
 class Axios{
 
     readonly axiosinstance:AxiosInstance;
 
     constructor(){
         this.axiosinstance = axios.create({
-            baseURL: process.env.NEXT_PUBLIC_BASE_URL,
+            baseURL: baseURL,
             headers: {
                 'Content-Type': 'application/json',
             },
