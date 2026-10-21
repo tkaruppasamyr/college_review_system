@@ -52,8 +52,8 @@ Teacher path : http://localhost:3000/dashboard/teacher
 
 ```plaintext
 
-email : 
-password : 
+email : admin@test.com
+password : password123
 
 ```
 
@@ -61,15 +61,15 @@ password :
 
 ```plaintext
 
-email : 
-password : 
+email : student1_1@test.com
+password : password123
 
 ```
 **1.student :**
 
 ```plaintext
 
-email : 
-password : 
+email : student1_1@test.com 
+password : password123
 
 ```
