@@ -12,7 +12,7 @@ const UserSchema = new mongoose.Schema({
     is_active: { type: Boolean, default: true },
     is_deleted: { type: Boolean, default: false },
     create_at: { type: Date, default: Date.now },
-    college_id: { type: mongoose.Schema.Types.ObjectId, ref: 'College', index: true },
+    college_id: { type: mongoose.Schema.Types.ObjectId, ref: 'college', index: true },
     last_login: Date,
 })
 

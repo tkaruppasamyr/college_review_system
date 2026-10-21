@@ -9,3 +9,12 @@ export const TeacherStudentsDetailApi = (search:any,page:any,limit:any)=>`/colle
 export const TeacherCreateStudentApi = '/college/teacher/students';
 export const TeacherUpdateStudentApi = (id:string) => `/college/teacher/students/${id}`; 
 export const TeacherDeleteStudentApi = (id:string) => `/college/teacher/students/${id}`;
+export const CollegeGetApi = (search:string,page:number) => `/college/admin?search=${search}&page=${page}&limit=10`;
+export const CollegePostApi = `/college/admin/create`;
+export const CollegeUpdateApi = (editingRecord:any) => `/college/admin/update/${editingRecord}`;
+export const CollegeDeleteApi = (id:string) => `/college/admin/delete/${id}`;
+export const AdminTecherGetApi = (search:string,page:number) => `/college/admin/teachers?search=${search}&page=${page}&limit=10`;
+export const AdminTecherPostApi = `/college/admin/teachers/create`;
+export const AdminGetCollegeAssignedTeaher = `/college/admin/teachers/college/list?limit=100`;
+export const AdminUpdateTeaherDetails = (id:string) => `/college/admin/teachers/update/${id}`;
+export const AdminDeleteTeaherDetails = (id:string) => `/college/admin/teachers/delete/${id}`;

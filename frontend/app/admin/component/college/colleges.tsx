@@ -1,34 +1,23 @@
 "use client";
-import { useContext,useState,useEffect } from "react";
-import {AdminContext } from "../../page";
+import { useContext, useState, useEffect } from "react";
+import { AdminContext } from "../../page";
 import { axiosInstance } from "@/axios/axiosconfig";
-import { CreateollegeApi,CollegeListApi } from "../../../backendapi";
-
-
-interface College {
-    _id: string;
-    aishe_code: string;
-    college_name: string;
-    clg_loc_name?: string;
-    city?: string;
-    state?: string;
-}
+import { CollegeGetApi,CollegePostApi,CollegeUpdateApi,CollegeDeleteApi } from "../../../backendapi";
 
 export const Colleges = () => {
-    const [colleges, setColleges] = useState<College[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [page, setPage] = useState<number>(1);
-    const [limit] = useState<number>(10);
-    const [totalPages, setTotalPages] = useState<number>(1);
-    const [totalItems, setTotalItems] = useState<number>(0);
+    const { setEditingRecord, setIsModalOpen } = useContext(AdminContext);
+    const [colleges, setColleges] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [search, setSearch] = useState("");
+    const [totalPages, setTotalPages] = useState(1);
 
-    const fetchColleges = async (currentPage: number) => {
+    const fetchColleges = async () => {
         try {
             setLoading(true);
-            const response = await axiosInstance.Get(CollegeListApi(currentPage, limit));
+            const response = await axiosInstance.Get(CollegeGetApi(search, page));
             setColleges(response.data.data);
             setTotalPages(response.data.meta.totalPages);
-            setTotalItems(response.data.meta.total);
         } catch (err) {
             console.error("Failed to fetch colleges", err);
         } finally {
@@ -37,275 +26,128 @@ export const Colleges = () => {
     };
 
     useEffect(() => {
-        fetchColleges(page);
-    }, [page]);
+        const timer = setTimeout(() => fetchColleges(), 300);
+        return () => clearTimeout(timer);
+    }, [page, search]);
 
-    const handleEdit = (college: College) => {
-        console.log("Edit clicked for:", college._id);
+    const handleEdit = (college: any) => {
+        setEditingRecord(college);
+        setIsModalOpen(true);
     };
 
     const handleDelete = async (id: string) => {
         if (!window.confirm("Are you sure you want to delete this college?")) return;
-        try {
-            await axiosInstance.Delete(`/college/${id}`);
-            fetchColleges(page);
-        } catch (err) {
-            console.error("Failed to delete college", err);
-        }
+        await axiosInstance.Delete(CollegeDeleteApi(id));
+        fetchColleges();
     };
 
     return (
-        <div className="mt-8 bg-white shadow-sm border border-gray-200 rounded-lg overflow-hidden flex flex-col">
-            {/* Header - Fixed at top of card */}
-            <div className="px-6 py-4 border-b border-gray-200 bg-white shrink-0">
-                <h2 className="text-lg font-semibold text-gray-800 m-0">Colleges List</h2>
-            </div>
+        <div className="flex flex-col gap-4 mt-4">
+            <input 
+                type="text" 
+                placeholder="Search colleges by name or AISHE code..." 
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-full max-w-sm rounded-lg border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none"
+            />
             
-            {/* Table Wrapper - Scrollable area (max-h-[50vh] controls the height) */}
-            <div className="overflow-x-auto overflow-y-auto max-h-[50vh] flex-1">
-                <table className="min-w-full divide-y divide-gray-200 relative">
-                    {/* Sticky Header - Stays visible when scrolling down */}
-                    <thead className="bg-gray-50 sticky top-0 z-10 outline outline-1 outline-gray-200">
+            <div className="overflow-x-auto border rounded-lg max-h-[50vh]">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50 sticky top-0">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                AISHE Code
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                College Name
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Location
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                City/State
-                            </th>
-                            <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50">
-                                Actions
-                            </th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">AISHE Code</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">College Name</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">City/State</th>
+                            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {loading ? (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
-                                    Loading...
+                        {loading ? <tr><td colSpan={4} className="p-4 text-center">Loading...</td></tr> : 
+                         colleges.map((c) => (
+                            <tr key={c._id}>
+                                <td className="px-6 py-4 text-sm text-gray-900">{c.aishe_code}</td>
+                                <td className="px-6 py-4 text-sm text-gray-700">{c.college_name}</td>
+                                <td className="px-6 py-4 text-sm text-gray-500">{c.city}, {c.state}</td>
+                                <td className="px-6 py-4 text-center">
+                                    <button onClick={() => handleEdit(c)} className="text-blue-600 mr-3 text-sm">Edit</button>
+                                    <button onClick={() => handleDelete(c._id)} className="text-red-600 text-sm">Delete</button>
                                 </td>
                             </tr>
-                        ) : colleges.length === 0 ? (
-                            <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500">
-                                    No colleges found.
-                                </td>
-                            </tr>
-                        ) : (
-                            colleges.map((college) => (
-                                <tr key={college._id} className="hover:bg-gray-50 transition-colors">
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {college.aishe_code}
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-700">
-                                        {college.college_name}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {college.clg_loc_name || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                        {[college.city, college.state].filter(Boolean).join(', ') || '-'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                        <button 
-                                            onClick={() => handleEdit(college)}
-                                            className="inline-flex items-center px-3 py-1.5 border border-blue-600 text-xs font-medium rounded text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mr-2 transition-colors"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button 
-                                            onClick={() => handleDelete(college._id)}
-                                            className="inline-flex items-center px-3 py-1.5 border border-red-600 text-xs font-medium rounded text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
-                        )}
+                        ))}
                     </tbody>
                 </table>
             </div>
 
-            {/* Pagination Footer - Fixed at bottom of card */}
-            {!loading && totalItems > 0 && (
-                <div className="px-6 py-4 bg-white border-t border-gray-200 flex items-center justify-between shrink-0">
-                    <div className="text-sm text-gray-700">
-                        Showing <span className="font-medium">{(page - 1) * limit + 1}</span> to{' '}
-                        <span className="font-medium">{Math.min(page * limit, totalItems)}</span> of{' '}
-                        <span className="font-medium">{totalItems}</span> entries
-                    </div>
-                    
-                    <div className="inline-flex rounded-md shadow-sm" role="group">
-                        <button 
-                            onClick={() => setPage(p => Math.max(p - 1, 1))} 
-                            disabled={page === 1}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:ring-2 focus:ring-blue-500 focus:text-blue-700"
-                        >
-                            Previous
-                        </button>
-                        <button 
-                            disabled
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 border-t border-b border-gray-300 cursor-default"
-                        >
-                            Page {page} of {totalPages}
-                        </button>
-                        <button 
-                            onClick={() => setPage(p => Math.min(p + 1, totalPages))} 
-                            disabled={page === totalPages}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:ring-2 focus:ring-blue-500 focus:text-blue-700"
-                        >
-                            Next
-                        </button>
-                    </div>
-                </div>
-            )}
+            <div className="flex justify-between items-center mt-2">
+                <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className="px-4 py-2 border rounded-md disabled:opacity-50 text-sm">Prev</button>
+                <span className="text-sm">Page {page} of {totalPages || 1}</span>
+                <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} className="px-4 py-2 border rounded-md disabled:opacity-50 text-sm">Next</button>
+            </div>
         </div>
     );
 };
 
-
 export const CollegesForm = () => {
-  
-  const {getTabcontroll, isCreateSubmitBtn, setIsCreateSubmitBtn,isModalOpen, setIsModalOpen} = useContext(AdminContext);
-  const [formData, setFormData] = useState({
-    aishe_code: "",
-    college_name: "",
-    clg_loc_name: "",
-    city: "",
-    state: "",
-    country: "",
-  });
+    const { getTabcontroll, isCreateSubmitBtn, setIsCreateSubmitBtn, setIsModalOpen, editingRecord } = useContext(AdminContext);
+    const [formData, setFormData] = useState({
+        aishe_code: editingRecord?.aishe_code || "",
+        college_name: editingRecord?.college_name || "",
+        clg_loc_name: editingRecord?.clg_loc_name || "",
+        city: editingRecord?.city || "",
+        state: editingRecord?.state || "",
+        country: editingRecord?.country || "India",
+    });
 
-  useEffect(() => {
-    if (isCreateSubmitBtn && getTabcontroll === "colleges" && isModalOpen) {
-      
-      const result:any = axiosInstance.Post(CreateollegeApi, formData);
-      if (result.status === 200) {
-        console.log(result.data);
-      }
-      setIsModalOpen(false);
-      setIsCreateSubmitBtn(false);
-    }
-  }, [isCreateSubmitBtn, setIsCreateSubmitBtn,setIsModalOpen]);
+    useEffect(() => {
+        if (isCreateSubmitBtn && getTabcontroll === "colleges") {
+            const saveCollege = async () => {
+                try {
+                    if (editingRecord) {
+                        await axiosInstance.Put(CollegeUpdateApi(editingRecord._id), formData);
+                    } else {
+                        await axiosInstance.Post(CollegePostApi, formData);
+                    }
+                    setIsModalOpen(false);
+                } catch (e) {
+                    console.error(e);
+                } finally {
+                    setIsCreateSubmitBtn(false);
+                }
+            };
+            saveCollege();
+        }
+    }, [isCreateSubmitBtn]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-500 mb-4">Enter the college details below.</p>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* AISHE Code (Required) */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            AISHE Code <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="aishe_code"
-            value={formData.aishe_code}
-            onChange={handleChange}
-            required
-            pattern="^[CUS]-\d{4,6}$"
-            minLength={6}
-            maxLength={8}
-            placeholder="e.g., C-12345"
-            title="Format must be like C-12345, U-1234, or S-123456"
-            className="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase"
-          />
+    return (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">AISHE Code</label>
+                <input type="text" name="aishe_code" value={formData.aishe_code} onChange={handleChange} required className="w-full border rounded-lg p-2.5 text-sm uppercase" />
+            </div>
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">College Name</label>
+                <input type="text" name="college_name" value={formData.college_name} onChange={handleChange} required className="w-full border rounded-lg p-2.5 text-sm" />
+            </div>
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Location Area</label>
+                <input type="text" name="clg_loc_name" value={formData.clg_loc_name} onChange={handleChange} className="w-full border rounded-lg p-2.5 text-sm" />
+            </div>
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">City</label>
+                <input type="text" name="city" value={formData.city} onChange={handleChange} className="w-full border rounded-lg p-2.5 text-sm" />
+            </div>
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">State</label>
+                <input type="text" name="state" value={formData.state} onChange={handleChange} className="w-full border rounded-lg p-2.5 text-sm" />
+            </div>
+            <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Country</label>
+                <input type="text" name="country" value={formData.country} onChange={handleChange} className="w-full border rounded-lg p-2.5 text-sm" />
+            </div>
         </div>
-
-        {/* College Name (Required) */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            College Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            name="college_name"
-            value={formData.college_name}
-            onChange={handleChange}
-            required
-            placeholder="e.g., National Institute of Technology"
-            className="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Location Name */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Location Area
-          </label>
-          <input
-            type="text"
-            name="clg_loc_name"
-            value={formData.clg_loc_name}
-            onChange={handleChange}
-            placeholder="e.g., South Campus"
-            className="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* City */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            City
-          </label>
-          <input
-            type="text"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-            placeholder="e.g., Mumbai"
-            className="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* State */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            State
-          </label>
-          <input
-            type="text"
-            name="state"
-            value={formData.state}
-            onChange={handleChange}
-            placeholder="e.g., Maharashtra"
-            className="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Country */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Country
-          </label>
-          <input
-            type="text"
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            placeholder="e.g., India"
-            className="w-full rounded-lg border border-gray-300 p-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
-
