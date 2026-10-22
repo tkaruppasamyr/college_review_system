@@ -1,6 +1,7 @@
 'use client';
-
+import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { axiosInstance } from "@/axios/axiosconfig";
@@ -18,6 +19,7 @@ interface Review {
 }
 
 export default function StudentDashboard() {
+  const router = useRouter();
   const { AuthUserData } = useAuth();
   
   // State for fetching data
@@ -37,11 +39,19 @@ export default function StudentDashboard() {
     try {
       setIsLoading(true);
       // Replace with your actual backend route to get user's reviews
-      const response = await axiosInstance.Get(MyReviewsApi);
-
+      const response:any = await axiosInstance.Get(MyReviewsApi);
       setMyReviews(response.data.data || []);
     } catch (error) {
-      console.error("Error fetching reviews:", error);
+      if(axios.isAxiosError(error)){
+        const status = error.response?.status;
+        if(status === 401){
+          router.push("/auth/login");     
+        }
+        if(status === 403){
+          router.push("/auth/login");     
+        }
+      }
+      // console.error("Error fetching reviews:", error);
     } finally {
       setIsLoading(false);
     }

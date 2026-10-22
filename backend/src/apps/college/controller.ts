@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { CreateCollegeSchema } from './schema';
 import { collegeservice } from './college_service';
 import { RatingDb } from './rating_service';
+import { TokenClear } from '../auth/authhandler';
 
 
 class CollegeController{
@@ -9,7 +10,7 @@ class CollegeController{
   async setCollegeCreate(req: Request, res: Response) {
     try {
       if(!req.user.is_admin){
-        return res.status(401).json({ success: false, message: "Unauthorized" });
+        return res.status(403).json({ success: false, message: "Unauthorized" });
       }
       const { error, value} = CreateCollegeSchema.validate(req.body);
       if (error) {
@@ -98,6 +99,12 @@ class CollegeController{
   async getMyReviews(req: Request, res: Response) {
     try {
           const userId = req.user._id;  
+
+          if(!req.user.is_student){
+            TokenClear(req, res);
+            return res.status(403).json({ "is_permission": false, "message": "Unauthorized" });
+          }
+          
           const reviews = await RatingDb.find({ user_id: userId })
             .populate('college_id', 'college_name') 
             .sort({ create_at: -1 });

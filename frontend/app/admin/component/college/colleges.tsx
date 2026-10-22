@@ -3,8 +3,12 @@ import { useContext, useState, useEffect } from "react";
 import { AdminContext } from "../../page";
 import { axiosInstance } from "@/axios/axiosconfig";
 import { CollegeGetApi,CollegePostApi,CollegeUpdateApi,CollegeDeleteApi } from "../../../backendapi";
+import axios from "axios";
+import { useRouter } from "next/router";
+
 
 export const Colleges = () => {
+    const router = useRouter();
     const { setEditingRecord, setIsModalOpen } = useContext(AdminContext);
     const [colleges, setColleges] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -19,6 +23,15 @@ export const Colleges = () => {
             setColleges(response.data.data);
             setTotalPages(response.data.meta.totalPages);
         } catch (err) {
+            if(axios.isAxiosError(err)){
+                const status = err.response?.status;
+                if(status === 401){
+                router.push("/auth/login");     
+                }
+                if(status === 403){
+                router.push("/auth/login");     
+                }
+            }
             console.error("Failed to fetch colleges", err);
         } finally {
             setLoading(false);
